@@ -3,11 +3,12 @@ import h5py
 import numpy as np
 from arpes.endstations import SingleFileEndstation, add_endstation
 
+__all__ = ["NeXusEndstation"]
 
 class NeXusEndstation(SingleFileEndstation):
     """An endstation for reading arpes data from a nexus file."""
 
-    PRINCIPAL_NAME = "nxs"
+    PRINCIPAL_NAME = "NXmpes"
 
     _TOLERATED_EXTENSIONS = {
         ".nxs",
@@ -24,14 +25,14 @@ class NeXusEndstation(SingleFileEndstation):
         """
         with h5py.File(path, "r") as h5file:
             return xr.DataArray(
-                h5file["entry/data/Photoemission intensity"][:],
+                h5file["/entry/data/data"][:],
                 coords={
-                    "tpp": np.squeeze(h5file["entry/data/calculated_Tpp"][:]),
-                    "BE": np.squeeze(np.transpose(h5file["entry/data/calculated_Energy"][:])),
-                    "kx": np.squeeze(h5file["entry/data/calculated_kx"][:]),
-                    "ky": np.squeeze(h5file["entry/data/calculated_ky"][:]),
+                    "delay": np.squeeze(h5file["/entry/data/delay"][:]),
+                    "eV": np.squeeze(np.transpose(h5file["/entry/data/energy"][:])),
+                    "kx": np.squeeze(h5file["/entry/data/kx"][:]),
+                    "ky": np.squeeze(h5file["/entry/data/ky"][:]),
                 },
-                dims=["delay", "eV", "kx", "ky"],
+                dims=["kx", "ky", "eV", "delay"],
             )
 
     def load_single_frame(
