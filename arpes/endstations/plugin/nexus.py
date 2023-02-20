@@ -3,6 +3,7 @@ import xarray as xr
 import h5py
 import numpy as np
 from arpes.endstations import SingleFileEndstation, add_endstation
+from arpes.config import ureg
 
 __all__ = ["NeXusEndstation"]
 
@@ -30,6 +31,8 @@ class NeXusEndstation(SingleFileEndstation):
                 attributes[name] = bool(dataset[()])
             elif dataset.dtype.kind in 'iufc':
                 attributes[name] = dataset[()]
+                if 'units' in dataset.attrs:
+                    attributes[name] = attributes[name] * ureg(dataset.attrs['units'])
             elif dataset.dtype.kind in "O" and dataset.shape == ():
                 attributes[name] = dataset[()].decode()
 

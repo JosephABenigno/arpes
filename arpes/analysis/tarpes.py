@@ -1,4 +1,5 @@
 """Very basic, generic time-resolved ARPES analysis tools."""
+from typing import Optional
 import numpy as np
 
 from arpes.preparation import normalize_dim
@@ -6,7 +7,7 @@ from arpes.provenance import update_provenance
 from arpes.typing import DataType
 from arpes.utilities import normalize_to_spectrum
 
-__all__ = ("find_t0", "relative_change", "normalized_relative_change")
+__all__ = ("find_t0", "relative_change", "normalized_relative_change", "calc_fluence")
 
 
 @update_provenance("Normalized subtraction map")
@@ -93,3 +94,35 @@ def find_t0(data: DataType, e_bound=0.02) -> float:
     coord_max = summed.argmax().item()
 
     return summed.coords["delay"].values[coord_max]
+
+def calc_fluence(
+        data: DataType,
+        window_transmission: float = 1,
+        reflectivity: float = 0,
+        aoi: float = 45
+    ) -> float:
+    def calc_abs_fluence(fluence: float):
+        return (fluence * window_transmission * (1 - reflectivity)).to('mJ/cm^2')
+
+    keymap = {
+        'pump_beam': 'instrument/beam_pump',
+        'pump_source': 'instrument/source_pump'
+    }
+
+    if f"{keymap['pump_beam']}/fluence" in data.attrs:
+        return calc_abs_fluence(data.attrs[f"{keymap['pump_beam']}/fluence"])
+
+    if (
+        f"{keymap['pump_beam']}/average_power" in data.attrs
+        and f"{keymap['pump_beam']}/extent" in data.attrs
+        and f"{keymap['pump_source']}/frequency" in data.attrs
+    ):
+        square_area = np.prod(data.attrs[f"{keymap['pump_beam']}/extent"]) / np.cos(aoi / 180 / np.pi)
+        pulse_energy = (
+            data.attrs[f"{keymap['pump_beam']}/average_power"]
+            / data.attrs[f"{keymap['pump_source']}/frequency"]
+        )
+
+        return calc_abs_fluence(0.882542 * pulse_energy / square_area)
+
+    raise ValueError('No valid metadata found to extract fluence from.')
