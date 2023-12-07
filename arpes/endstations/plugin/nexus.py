@@ -1,9 +1,11 @@
 from typing import Any, Dict, Union
+from pint import Quantity
 import xarray as xr
 import h5py
 import numpy as np
 from arpes.endstations import SingleFileEndstation, add_endstation
 from arpes.config import ureg
+from collections.abc import Sequence
 
 __all__ = ["NeXusEndstation"]
 
@@ -14,7 +16,7 @@ nexus_translation_table = {
     'sample/transformations/rot_tht': 'theta',
     'sample/transformations/rot_phi': 'beta',
     'sample/transformations/rot_omg': 'chi',
-    'instrument/source/photon_energy': 'hv',
+    'instrument/source_probe/photon_energy': 'hv',
     'instrument/electronanalyser/work_function': 'work_function',
     'instrument/electronanalyser/transformations/analyzer_rotation': 'alpha',
     'instrument/electronanalyser/transformations/analyzer_elevation': 'psi',
@@ -84,6 +86,12 @@ class NeXusEndstation(SingleFileEndstation):
                 attributes["theta_offset"] = attributes["theta_offset"] + 26*ureg("degrees").to(ureg.rad)
             except:
                 pass
+
+            # remove axis arrays from static coordinates:
+            for axis in self.ENSURE_COORDS_EXIST:
+                if axis in attributes and (isinstance(attributes[axis], (Sequence, np.ndarray)) or (isinstance(attributes[axis], Quantity) and (isinstance(attributes[axis].magnitude, (Sequence, np.ndarray))))):
+                    if len(attributes[axis])>0:
+                        attributes[axis] = attributes[axis][0]
 
             return attributes
 
