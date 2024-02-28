@@ -13,17 +13,18 @@ nexus_translation_table = {
     'sample/transformations/trans_x': 'x',
     'sample/transformations/trans_y': 'y',
     'sample/transformations/trans_z': 'z',
-    'sample/transformations/rot_tht': 'theta',
-    'sample/transformations/rot_phi': 'beta',
-    'sample/transformations/rot_omg': 'chi',
-    'instrument/source_probe/photon_energy': 'hv',
+    'sample/transformations/sample_polar': 'theta',
+    'sample/transformations/offset_polar': 'theta_offset',
+    'sample/transformations/sample_tilt': 'beta',
+    'sample/transformations/offset_tilt': 'beta_offset',
+    'sample/transformations/sample_azimuth': 'chi',
+    'sample/transformations/offset_azimuth': 'chi_offset',
+    'instrument/beam_probe/incident_energy': 'hv',
     'instrument/electronanalyser/work_function': 'work_function',
     'instrument/electronanalyser/transformations/analyzer_rotation': 'alpha',
     'instrument/electronanalyser/transformations/analyzer_elevation': 'psi',
     'instrument/electronanalyser/transformations/analyzer_dispersion': 'phi',
-    'instrument/electronanalyser/transformations/analyzer_dispersion': 'phi',
-    'instrument/electronanalyser/energydispersion/kinetic_energy': 'eV',
-    'sample/transformations/tht_offset': 'theta_offset'
+    'instrument/electronanalyser/energydispersion/kinetic_energy': 'eV'
 }
 
 class NeXusEndstation(SingleFileEndstation):
@@ -81,11 +82,9 @@ class NeXusEndstation(SingleFileEndstation):
                             attributes[newkey] = attributes[key]
                     except AttributeError:
                         attributes[newkey] = attributes[key]
-
-            try:
-                attributes["theta_offset"] = attributes["theta_offset"] + 26*ureg("degrees").to(ureg.rad)
-            except:
-                pass
+                    # flip sign of offsets, as they are subtracted in pyARPES rather than added
+                    if newkey.find("offset") > -1:
+                        attributes[newkey] *= -1
 
             # remove axis arrays from static coordinates:
             for axis in self.ENSURE_COORDS_EXIST:
@@ -105,7 +104,8 @@ class NeXusEndstation(SingleFileEndstation):
                     axis_depends:str = nxdata.attrs[f"{axis}_depends"]
                     axis_depends_key = axis_depends.split("/",2)[-1]
                     new_axes.append(nexus_translation_table[axis_depends_key])
-                    attributes.pop(nexus_translation_table[axis_depends_key])
+                    if nexus_translation_table[axis_depends_key] in attributes:
+                        attributes.pop(nexus_translation_table[axis_depends_key])
                 except KeyError as exc:
                     raise KeyError(f"Cannot find dependent axis field for axis {axis}.") from exc
 

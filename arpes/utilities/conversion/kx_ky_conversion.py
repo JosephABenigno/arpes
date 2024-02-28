@@ -310,6 +310,11 @@ class ConvertKxKy(CoordinateConverter):
 
         chi = self.arr.S.lookup_offset_coord("chi")
 
+        try:
+            chi = chi.magnitude
+        except:
+            pass
+
         self.rkx = np.zeros_like(kx)
         self.rky = np.zeros_like(ky)
         _rotate_kx_ky(kx, ky, self.rkx, self.rky, chi)
