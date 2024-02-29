@@ -141,6 +141,15 @@ class ConvertKp(CoordinateConverter):
             )
             parallel_angle = self.arr.S.lookup_offset_coord("theta")
 
+        offset = self.arr.S.phi_offset + parallel_angle
+
+        try:
+            polar_angle = polar_angle.magnitude
+            parallel_angle = parallel_angle.magnitude
+            offset = offset.magnitude
+        except:
+            pass
+
         if self.k_tot is None:
             self.compute_k_tot(binding_energy)
 
@@ -152,7 +161,7 @@ class ConvertKp(CoordinateConverter):
             kp / np.cos(polar_angle),
             self.k_tot,
             self.phi,
-            self.arr.S.phi_offset + parallel_angle,
+            offset,
             par_tot,
             False,
         )
