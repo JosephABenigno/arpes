@@ -4,7 +4,7 @@ from typing import Optional, Union
 import h5py
 import numpy as np
 import xarray as xr
-from pint import DimensionalityError, Quantity
+from pint import Quantity
 
 from arpes.config import ureg
 from arpes.endstations import SingleFileEndstation, add_endstation
@@ -28,10 +28,6 @@ nexus_translation_table = {
     "instrument/electronanalyser/transformations/analyzer_dispersion": "phi",
     "instrument/electronanalyser/energydispersion/kinetic_energy": "eV",
 }
-
-
-class IncompatibleUnitsError(Exception):
-    pass
 
 
 class NeXusEndstation(SingleFileEndstation):
@@ -135,15 +131,9 @@ class NeXusEndstation(SingleFileEndstation):
 
             coords = {}
             for axis, new_axis in zip(axes, new_axes):
-                if "units" not in nxdata[axis].attrs:
-                    raise IncompatibleUnitsError(f"Axis {axis} does not have units.")
                 coords[new_axis] = nxdata[axis][:] * ureg(nxdata[axis].attrs["units"])
-                try:
+                if coords[new_axis].units == "degree":
                     coords[new_axis] = coords[new_axis].to(ureg.rad)
-                except DimensionalityError as exc:
-                    raise IncompatibleUnitsError(
-                        f"Unit {coords[new_axis].units} of axis {axis} is not a unit of angle."
-                    ) from exc
             data = nxdata[nxdata.attrs["signal"]][:]
             dims = new_axes
 
