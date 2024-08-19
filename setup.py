@@ -30,7 +30,7 @@ DEPENDENCY_GROUPS = {
         "h5py>=3.2.1",
         "pyqtgraph>=0.12.0,<0.13.0",
         "PyQt5==5.15",
-        "netCDF4>=1.5.0,<2.0.0",
+        "netCDF4>=1.5.0,<1.7.0",
         "colorcet",
         "pint",
         "pandas",
