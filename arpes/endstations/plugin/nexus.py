@@ -120,14 +120,14 @@ class NeXusEndstation(SingleFileEndstation):
             # handle moving axes
             new_axes = []
             for axis in axes:
-                if f"{axis}_depends" not in nxdata.attrs:
-                    raise KeyError(f"Dependent axis field not found for axis {axis}.")
+                if f"reference" not in nxdata[axis].attrs:
+                    raise KeyError(f"Reference attribute not found for axis {axis}.")
 
-                axis_depends: str = nxdata.attrs[f"{axis}_depends"]
-                axis_depends_key = axis_depends.split("/", 2)[-1]
-                new_axes.append(nexus_translation_table[axis_depends_key])
-                if nexus_translation_table[axis_depends_key] in attributes:
-                    attributes.pop(nexus_translation_table[axis_depends_key])
+                axis_reference: str = nxdata[axis].attrs["reference"]
+                axis_reference_key = axis_reference.split("/", 2)[-1]
+                new_axes.append(nexus_translation_table[axis_reference_key])
+                if nexus_translation_table[axis_reference_key] in attributes:
+                    attributes.pop(nexus_translation_table[axis_reference_key])
 
             coords = {}
             for axis, new_axis in zip(axes, new_axes):
