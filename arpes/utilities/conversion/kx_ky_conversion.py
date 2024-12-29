@@ -113,10 +113,6 @@ class ConvertKp(CoordinateConverter):
         except IndexError:
             inferred_kp_res = MOMENTUM_BREAKPOINTS[-2]
 
-        lower_point = kp_low - K_SPACE_BORDER
-        upper_point = kp_high + K_SPACE_BORDER
-        step = resolution.get("kp", inferred_kp_res)
-        print(kp_low, kp_high, lower_point, upper_point, step)
         coordinates["kp"] = np.arange(
             kp_low - K_SPACE_BORDER, kp_high + K_SPACE_BORDER, resolution.get("kp", inferred_kp_res)
         )
